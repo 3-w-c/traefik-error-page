@@ -23,7 +23,8 @@ type Config struct {
 	Status    []string `json:"status,omitempty"`
 	Service   string   `json:"service,omitempty"`
 	Query     string   `json:"query,omitempty"`
-	EmptyOnly bool     `json:"emptyOnly,omitempty"`
+	ContentsOnly bool     `json:"contentsOnly,omitempty"`
+	ContentsOnlyMatch string    `json:"contentsOnlyMatch,omitempty"`
 	Debug     bool     `json:"debug,omitempty"`
 }
 
@@ -33,7 +34,8 @@ func CreateConfig() *Config {
 		Status:    make([]string, 0),
 		Service:   "",
 		Query:     "/{StatusCode}.html",
-		EmptyOnly: true,
+		ContentsOnly: true,
+		ContentsOnlyMatch: "",
 		Debug:     false,
 	}
 }
@@ -45,7 +47,8 @@ type ErrorPage struct {
 	service          string
 	query            string
 	name             string
-	emptyOnly        bool
+	contentsOnly     bool
+	contentsOnlyMatch     string
 	debug            bool
 }
 
@@ -68,7 +71,8 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 		httpStatusRanges: httpStatusRanges,
 		service:          config.Service,
 		query:            config.Query,
-		emptyOnly:        config.EmptyOnly,
+		contentsOnly:      config.ContentsOnly,
+		contentsOnlyMatch:      config.ContentsOnlyMatch,
 		debug:            config.Debug,
 		next:             next,
 		name:             name,
@@ -78,10 +82,10 @@ func New(_ context.Context, next http.Handler, config *Config, name string) (htt
 func (ep *ErrorPage) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	ep.log(fmt.Sprintf("config %#v", ep))
 	ep.log("request incoming")
-	catcher := helpers.NewCodeCatcher(rw, ep.httpStatusRanges, ep.emptyOnly)
+	catcher := helpers.NewCodeCatcher(rw, ep.httpStatusRanges, ep.contentsOnly, ep.contentsOnlyMatch)
 	ep.next.ServeHTTP(catcher, req)
-	ep.log(fmt.Sprintf("request served, response has filtered code %t and body %t", catcher.IsFilteredCode(), catcher.HasBody()))
-	if !catcher.IsFilteredCode() || catcher.HasBody() {
+	ep.log(fmt.Sprintf("request served, response has filtered code %t and body %t", catcher.IsFilteredCode(), catcher.IsMatchingBody()))
+	if !catcher.IsFilteredCode() || !catcher.IsMatchingBody() {
 		ep.log("request is OK, should not be handled")
 		return
 	}

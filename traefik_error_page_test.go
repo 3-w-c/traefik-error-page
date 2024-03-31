@@ -200,7 +200,7 @@ func TestErrorWithResponseButForceHandle(t *testing.T) {
 	cfg.Status = []string{"400-499", "500-599"}
 	cfg.Service = "https://http.cat"
 	cfg.Query = "/{status}"
-	cfg.EmptyOnly = false
+	cfg.ContentsOnly = false
 
 	ctx := context.Background()
 	next := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {

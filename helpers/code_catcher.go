@@ -19,17 +19,19 @@ type CodeCatcher struct {
 	caughtFilteredBody bool
 	responseWriter     http.ResponseWriter
 	headersSent        bool
-	emptyOnly          bool
+	contentsOnly       bool
+	contentsOnlyMatch  string
 }
 
 // NewCodeCatcher creates a new CodeCatcher.
-func NewCodeCatcher(rw http.ResponseWriter, httpCodeRanges HTTPCodeRanges, emptyOnly bool) *CodeCatcher {
+func NewCodeCatcher(rw http.ResponseWriter, httpCodeRanges HTTPCodeRanges, contentsOnly bool, contentsOnlyMatch string) *CodeCatcher {
 	return &CodeCatcher{
 		headerMap:      make(http.Header),
 		code:           http.StatusOK, // If backend does not call WriteHeader on us, we consider it's a 200.
 		responseWriter: rw,
 		httpCodeRanges: httpCodeRanges,
-		emptyOnly:      emptyOnly,
+		contentsOnly:   contentsOnly,
+		contentsOnlyMatch:   contentsOnlyMatch,
 	}
 }
 
@@ -57,9 +59,12 @@ func (cc *CodeCatcher) IsFilteredCode() bool {
 	return cc.caughtFilteredCode
 }
 
-// HasBody tells if the response has a body.
-func (cc *CodeCatcher) HasBody() bool {
-	return cc.emptyOnly && cc.caughtFilteredBody
+// BodyMatches tells if the response body was the same as the specified
+// contentsOnlyMatch
+// FIXME: this is a bit of a misnomer, it's really checking if it passed the
+// test. So if cc.contentsOnly is false, always return true.
+func (cc *CodeCatcher) IsMatchingBody() bool {
+	return !cc.contentsOnly || cc.caughtFilteredBody
 }
 
 // Write writes the response or ignores it.
@@ -68,7 +73,7 @@ func (cc *CodeCatcher) Write(buf []byte) (int, error) {
 	// Otherwise, cc.code is actually a 200 here.
 	cc.WriteHeader(cc.code)
 
-	if cc.caughtFilteredCode && !cc.emptyOnly {
+	if cc.caughtFilteredCode && !cc.contentsOnly {
 		// We don't care about the contents of the response,
 		// since we want to serve the ones from the error page,
 		// so we just drop them.
@@ -86,14 +91,23 @@ func (cc *CodeCatcher) Write(buf []byte) (int, error) {
 		cc.headersSent = true
 	}
 
-	cc.caughtFilteredBody = true
+	if cc.contentsOnly {
+		panic(cc.contentsOnlyMatch);
+    // Convert the body back to a string for comparison
+    bodyString := string(buf)
+
+    if bodyString == cc.contentsOnlyMatch {
+			cc.caughtFilteredBody = true;
+		}
+	}
+
 	return cc.responseWriter.Write(buf)
 }
 
 // WriteHeader is, in the specific case of 1xx status codes, a direct call to the wrapped ResponseWriter, without marking headers as sent,
 // allowing so further calls.
 func (cc *CodeCatcher) WriteHeader(code int) {
-	if cc.headersSent || (cc.caughtFilteredCode && !cc.emptyOnly) {
+	if cc.headersSent || (cc.caughtFilteredCode && !cc.contentsOnly) {
 		return
 	}
 
