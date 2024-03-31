@@ -16,7 +16,7 @@ type CodeCatcher struct {
 	code               int
 	httpCodeRanges     HTTPCodeRanges
 	caughtFilteredCode bool
-	caughtFilteredBody bool
+	caughtUnmatchingBody bool
 	responseWriter     http.ResponseWriter
 	headersSent        bool
 	contentsOnly       bool
@@ -64,7 +64,7 @@ func (cc *CodeCatcher) IsFilteredCode() bool {
 // FIXME: this is a bit of a misnomer, it's really checking if it passed the
 // test. So if cc.contentsOnly is false, always return true.
 func (cc *CodeCatcher) IsMatchingBody() bool {
-	return !cc.contentsOnly || cc.caughtFilteredBody
+	return !cc.contentsOnly || !cc.caughtUnmatchingBody
 }
 
 // Write writes the response or ignores it.
@@ -81,7 +81,7 @@ func (cc *CodeCatcher) Write(buf []byte) (int, error) {
 	}
 
 	// write the value because was ignored in the WriteHeader below
-	if !cc.caughtFilteredBody && !cc.headersSent {
+	if !cc.caughtUnmatchingBody && !cc.headersSent {
 		// The copy is not appending the values,
 		// to not repeat them in case any informational status code has been written.
 		for k, v := range cc.Header() {
@@ -92,12 +92,11 @@ func (cc *CodeCatcher) Write(buf []byte) (int, error) {
 	}
 
 	if cc.contentsOnly {
-		panic(cc.contentsOnlyMatch);
     // Convert the body back to a string for comparison
     bodyString := string(buf)
 
-    if bodyString == cc.contentsOnlyMatch {
-			cc.caughtFilteredBody = true;
+    if bodyString != cc.contentsOnlyMatch {
+			cc.caughtUnmatchingBody = true;
 		}
 	}
 
