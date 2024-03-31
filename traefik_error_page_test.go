@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	plugin "github.com/melchor629/traefik-error-page"
+	plugin "github.com/3-w-c/traefik-error-page"
 )
 
 func TestFailsIfEmptyStatus(t *testing.T) {
