@@ -24,7 +24,7 @@ services:
       - 8080:8080
     labels:
       - "traefik.enable=true"
-      - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.status=404"
+      - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.status=404,500-503"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.service=https://http.cat"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.query=/{status}"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.debug=true"
