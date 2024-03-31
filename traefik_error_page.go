@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/melchor629/traefik-error-page/helpers"
+	"github.com/3-w-c/traefik-error-page/helpers"
 )
 
 // Config the plugin configuration.
