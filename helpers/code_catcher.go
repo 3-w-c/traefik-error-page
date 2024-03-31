@@ -97,6 +97,8 @@ func (cc *CodeCatcher) Write(buf []byte) (int, error) {
 
     if bodyString != cc.contentsOnlyMatch {
 			cc.caughtUnmatchingBody = true;
+		} else {
+			return len(buf), nil
 		}
 	}
 

@@ -25,7 +25,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.status=404,500-503"
-      - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.service=https://autonomic.zone"
+      - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.service=https://http.cat"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.query=/{status}"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.debug=true"
       - "traefik.http.middlewares.error-pages.plugin.traefik-error-page.contentsOnlyMatch=Bad Gateway"
