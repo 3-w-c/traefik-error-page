@@ -30,7 +30,7 @@ linters-settings:
       main:
         allow:
           - $gostd
-          - github.com/melchor629/traefik-error-page
+          - github.com/3-w-c/traefik-error-page
 
 linters:
   enable-all: true
